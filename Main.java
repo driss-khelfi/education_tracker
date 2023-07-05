@@ -27,7 +27,8 @@ public class Main {
                 System.out.println("a. Ajouter une ligne");
                 System.out.println("m. Modifier une ligne");
                 System.out.println("s. Supprimer une ligne");
-                System.out.println("d. Lire une ligne");
+                System.out.println("l. Lire une ligne");
+                System.out.println("d. Lire la base de donnée");
                 System.out.println("r. Rechercher une ligne");
                 System.out.println("c. Fermer la table");
                 System.out.println("q. Quitter");
@@ -46,6 +47,9 @@ public class Main {
                         break;
                     case "d":
                         displayData(statement);
+                        break;
+                    case "l":
+                        readData(statement, scanner);
                         break;
                     case "r":
                         searchData(statement, scanner);
@@ -101,6 +105,43 @@ public class Main {
             System.out.println("Échec de l'ajout de la ligne.");
         }
     }
+    private static void readData(Statement statement, Scanner scanner) throws SQLException {
+        System.out.println("Lecture de données");
+
+        // Demander à l'utilisateur de saisir l'ID de la ligne à lire
+        System.out.print("ID de la ligne à lire : ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consommer la fin de ligne
+
+        // Préparer la requête SELECT avec la clause WHERE
+        String query = "SELECT * FROM students WHERE id = ?";
+        java.sql.PreparedStatement preparedStatement = statement.getConnection().prepareStatement(query);
+
+        // Affecter la valeur du paramètre
+        preparedStatement.setInt(1, id);
+
+        // Exécuter la requête
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        if (resultSet.next()) {
+            // Récupérer les valeurs des colonnes de la ligne
+            String firstName = resultSet.getString("first_name");
+            String lastName = resultSet.getString("last_name");
+            int age = resultSet.getInt("age");
+            String grades = resultSet.getString("grades");
+
+            // Afficher les valeurs
+            System.out.println("Prénom : " + firstName);
+            System.out.println("Nom : " + lastName);
+            System.out.println("Âge : " + age);
+            System.out.println("Notes : " + grades);
+        } else {
+            System.out.println("Aucune ligne trouvée avec l'ID spécifié.");
+        }
+
+        resultSet.close();
+    }
+
 
 
     private static void updateData(Statement statement, Scanner scanner) throws SQLException {
