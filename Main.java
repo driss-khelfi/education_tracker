@@ -243,8 +243,156 @@ public class Main {
 
 
     private static void searchData(Statement statement, Scanner scanner) throws SQLException {
-        // Logique de recherche des données
+        System.out.println("Recherche avancée");
+
+        System.out.println("Options :");
+        System.out.println("n. Rechercher par nom");
+        System.out.println("p. Rechercher par prénom");
+        System.out.println("a. Rechercher par tranche d'âge");
+        System.out.println("g. Rechercher par échelle de note");
+        String input = scanner.nextLine();
+
+        switch (input.toLowerCase()) {
+            case "p":
+                System.out.print("Recherche par prénom : ");
+                String searchFirstName = scanner.nextLine();
+
+                // Préparer la requête paramétrée
+                String query = "SELECT * FROM students WHERE first_name LIKE ?";
+                java.sql.PreparedStatement preparedStatement = statement.getConnection().prepareStatement(query);
+                preparedStatement.setString(1, "%" + searchFirstName + "%");
+
+                // Exécuter la requête
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                // Traiter les résultats
+                while (resultSet.next()) {
+                    String firstName = resultSet.getString("first_name");
+                    String lastName = resultSet.getString("last_name");
+                    int age = resultSet.getInt("age");
+                    float grade = resultSet.getFloat("grades");
+
+                    System.out.println("Prénom : " + firstName);
+                    System.out.println("Nom : " + lastName);
+                    System.out.println("Âge : " + age);
+                    System.out.println("Note : " + grade);
+                    System.out.println("---------------------");
+                }
+
+                resultSet.close();
+                break;
+
+            case "n":
+                System.out.print("Recherche par nom : ");
+                String searchLastName = scanner.nextLine();
+
+                // Préparer la requête paramétrée
+                String queryLastName = "SELECT * FROM students WHERE last_name LIKE ?";
+                java.sql.PreparedStatement preparedStatementLastName = statement.getConnection().prepareStatement(queryLastName);
+                preparedStatementLastName.setString(1, "%" + searchLastName + "%");
+
+                // Exécuter la requête
+                ResultSet resultSetLastName = preparedStatementLastName.executeQuery();
+
+                // Traiter les résultats
+                while (resultSetLastName.next()) {
+                    String firstName = resultSetLastName.getString("first_name");
+                    String lastName = resultSetLastName.getString("last_name");
+                    int age = resultSetLastName.getInt("age");
+                    float grade = resultSetLastName.getFloat("grades");
+
+                    System.out.println("Prénom : " + firstName);
+                    System.out.println("Nom : " + lastName);
+                    System.out.println("Âge : " + age);
+                    System.out.println("Note : " + grade);
+                    System.out.println("---------------------");
+                }
+
+                resultSetLastName.close();
+                break;
+
+            case "a":
+                System.out.println("Recherche par tranche d'âge");
+
+                System.out.print("Âge minimum : ");
+                int minAge = scanner.nextInt();
+                scanner.nextLine(); // Consommer la fin de ligne
+
+                System.out.print("Âge maximum : ");
+                int maxAge = scanner.nextInt();
+                scanner.nextLine(); // Consommer la fin de ligne
+
+                // Préparer la requête paramétrée
+                String queryAgeRange = "SELECT * FROM students WHERE age >= ? AND age <= ?";
+                java.sql.PreparedStatement preparedStatementAgeRange = statement.getConnection().prepareStatement(queryAgeRange);
+                preparedStatementAgeRange.setInt(1, minAge);
+                preparedStatementAgeRange.setInt(2, maxAge);
+
+                // Exécuter la requête
+                ResultSet resultSetAgeRange = preparedStatementAgeRange.executeQuery();
+
+                // Traiter les résultats
+                while (resultSetAgeRange.next()) {
+                    String firstName = resultSetAgeRange.getString("first_name");
+                    String lastName = resultSetAgeRange.getString("last_name");
+                    int age = resultSetAgeRange.getInt("age");
+                    float grade = resultSetAgeRange.getFloat("grades");
+
+                    System.out.println("Prénom : " + firstName);
+                    System.out.println("Nom : " + lastName);
+                    System.out.println("Âge : " + age);
+                    System.out.println("Note : " + grade);
+                    System.out.println("---------------------");
+                }
+
+                resultSetAgeRange.close();
+                break;
+
+            case "g":
+                System.out.println("Recherche par échelle de note");
+
+                System.out.print("Note minimum : ");
+                int minGrade = scanner.nextInt();
+                scanner.nextLine(); // Consommer la fin de ligne
+
+                System.out.print("Note maximum : ");
+                int maxGrade = scanner.nextInt();
+                scanner.nextLine(); // Consommer la fin de ligne
+
+                // Préparer la requête paramétrée
+                String queryGradeRange = "SELECT * FROM students WHERE grades >= ? AND grades <= ?";
+                java.sql.PreparedStatement preparedStatementGradeRange = statement.getConnection().prepareStatement(queryGradeRange);
+                preparedStatementGradeRange.setFloat(1, minGrade);
+                preparedStatementGradeRange.setFloat(2, maxGrade);
+
+                // Exécuter la requête
+                ResultSet resultSetGradeRange = preparedStatementGradeRange.executeQuery();
+
+                // Traiter les résultats
+                while (resultSetGradeRange.next()) {
+                    String firstName = resultSetGradeRange.getString("first_name");
+                    String lastName = resultSetGradeRange.getString("last_name");
+                    int age = resultSetGradeRange.getInt("age");
+                    float grade = resultSetGradeRange.getFloat("grades");
+
+                    System.out.println("Prénom : " + firstName);
+                    System.out.println("Nom : " + lastName);
+                    System.out.println("Âge : " + age);
+                    System.out.println("Note : " + grade);
+                    System.out.println("---------------------");
+                }
+
+                resultSetGradeRange.close();
+                break;
+
+
+
+            default:
+                System.out.println("Option invalide.");
+                break;
+        }
     }
+
 
     private static void sortData(Statement statement, Scanner scanner) throws SQLException {
         // Logique de tri de donnée
