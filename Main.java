@@ -10,6 +10,7 @@ public class Main {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/students";
     private static final String DB_USERNAME = "root";
     private static final String DB_PASSWORD = "msq.575:MRN!";
+    private static boolean reverseOrder = false;
 
     public static void main(String[] args) {
         try {
@@ -30,6 +31,7 @@ public class Main {
                 System.out.println("l. Lire une ligne");
                 System.out.println("d. Lire la base de donnée");
                 System.out.println("r. Rechercher une ligne");
+                System.out.println("t. Trier la base de donnée");
                 System.out.println("c. Fermer la table");
                 System.out.println("q. Quitter");
 
@@ -54,6 +56,10 @@ public class Main {
                     case "r":
                         searchData(statement, scanner);
                         break;
+                    case "t":
+                        sortData(statement, scanner);
+                        break;
+
 
                     case "c":
                         exit = true;
@@ -188,19 +194,17 @@ public class Main {
     private static void deleteData(Statement statement, Scanner scanner) throws SQLException {
         System.out.println("Suppression de données");
 
-        // Demander à l'utilisateur de saisir les paramètres pour la suppression
-        System.out.print("Prénom de la ligne à supprimer : ");
-        String firstName = scanner.nextLine();
-        System.out.print("Nom de la ligne à supprimer : ");
-        String lastName = scanner.nextLine();
+        // Demander à l'utilisateur de saisir l'ID de la ligne à supprimer
+        System.out.print("ID de la ligne à supprimer : ");
+        int id = scanner.nextInt();
+        scanner.nextLine(); // Consommer la fin de ligne
 
         // Préparer la requête DELETE avec la clause WHERE
-        String query = "DELETE FROM students WHERE first_name = ? AND last_name = ?";
+        String query = "DELETE FROM students WHERE id = ?";
         java.sql.PreparedStatement preparedStatement = statement.getConnection().prepareStatement(query);
 
-        // Affecter les valeurs des paramètres
-        preparedStatement.setString(1, firstName);
-        preparedStatement.setString(2, lastName);
+        // Affecter la valeur du paramètre
+        preparedStatement.setInt(1, id);
 
         // Exécuter la requête
         int rowsAffected = preparedStatement.executeUpdate();
@@ -241,6 +245,109 @@ public class Main {
     private static void searchData(Statement statement, Scanner scanner) throws SQLException {
         // Logique de recherche des données
     }
+
+    private static void sortData(Statement statement, Scanner scanner) throws SQLException {
+        // Logique de tri de donnée
+        System.out.println("Options :");
+        System.out.println("n. Noms par ordre alphabétique");
+        System.out.println("p. Prénoms par ordre alphabétique");
+        System.out.println("a. Âge par ordre croissant");
+        System.out.println("g. Notes par ordre croissant");
+        String input2 = scanner.nextLine();
+        switch (input2.toLowerCase()) {
+            case "p":
+                System.out.print("Trier les prénoms dans l'ordre inverse ? (o pour oui /n pour non) : ");
+                String reverseInput0 = scanner.nextLine();
+                boolean reverseOrder0 = reverseInput0.equalsIgnoreCase("o");
+                sortLastName(statement, scanner, reverseOrder0);
+
+                break;
+            case "n":
+                System.out.print("Trier les noms dans l'ordre inverse ? (o pour oui /n pour non) : ");
+                String reverseInput1 = scanner.nextLine();
+                boolean reverseOrder1 = reverseInput1.equalsIgnoreCase("o");
+                sortLastName(statement, scanner, reverseOrder1);
+                break;
+            case "a":
+                System.out.print("Trier par age dans l'ordre décroissant ? (o pour oui /n pour non) : ");
+                String reverseInput2 = scanner.nextLine();
+                boolean reverseOrder2 = reverseInput2.equalsIgnoreCase("o");
+                sortAge(statement, scanner, reverseOrder2);
+                break;
+            case "g":
+                System.out.print("Trier par notes dans l'ordre décroissant ? (o pour oui /n pour non) : ");
+                String reverseInput3 = scanner.nextLine();
+                boolean reverseOrder3 = reverseInput3.equalsIgnoreCase("o");
+                sortGrades(statement, scanner, reverseOrder3);
+                break;
+            default:
+                System.out.println("Option invalide.");
+                break;
+        }
+    }
+
+
+    private static void sortFirstName(Statement statement, Scanner scanner) throws SQLException {
+        // Logique de tri des prénoms par ordre alphabétique
+        String order = reverseOrder ? "DESC" : "ASC";  // Détermine l'ordre du tri en fonction de l'option
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM students ORDER BY first_name, last_name, age");
+
+        // Affichage des résultats du tri
+        displaySortedData(resultSet);
+    }
+
+    private static void sortLastName(Statement statement, Scanner scanner, boolean reverseOrder) throws SQLException {
+        String order = reverseOrder ? "DESC" : "ASC";  // Détermine l'ordre du tri en fonction de l'option
+
+        String query = "SELECT * FROM students ORDER BY last_name " + order + ", first_name";
+
+        ResultSet resultSet = statement.executeQuery(query);
+        displaySortedData(resultSet);
+    }
+
+
+
+    private static void sortAge(Statement statement, Scanner scanner, boolean reverseOrder) throws SQLException {
+        // Logique de tri des âges par ordre croissant
+        String order = reverseOrder ? "DESC" : "ASC";  // Détermine l'ordre du tri en fonction de l'option
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM students ORDER BY age, last_name, first_name");
+
+        // Affichage des résultats du tri
+        displaySortedData(resultSet);
+
+    }
+
+    private static void sortGrades(Statement statement, Scanner scanner, boolean reverseOrder) throws SQLException {
+        // Logique de tri des notes par ordre croissant
+        String order = reverseOrder ? "DESC" : "ASC";  // Détermine l'ordre du tri en fonction de l'option
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM students ORDER BY grades, last_name, first_name");
+
+        // Affichage des résultats du tri
+        displaySortedData(resultSet);
+    }
+
+    private static void displaySortedData(ResultSet resultSet) throws SQLException {
+        // Obtention du nombre de colonnes
+        ResultSetMetaData metaData = resultSet.getMetaData();
+        int columnCount = metaData.getColumnCount();
+
+        // Affichage des en-têtes de colonne
+        for (int i = 1; i <= columnCount; i++) {
+            System.out.printf("%-15s", metaData.getColumnName(i));
+        }
+        System.out.println();
+
+        // Affichage des lignes de données
+        while (resultSet.next()) {
+            for (int i = 1; i <= columnCount; i++) {
+                System.out.printf("%-15s", resultSet.getString(i));
+            }
+            System.out.println();
+        }
+
+        resultSet.close();
+    }
+
 
     private static void closeResources(Connection connection, Statement statement) {
         try {
