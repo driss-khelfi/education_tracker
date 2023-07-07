@@ -33,6 +33,7 @@ public class Main {
                 System.out.println("r. Rechercher une ligne");
                 System.out.println("t. Trier la base de donnée");
                 System.out.println("c. Fermer la table");
+                System.out.println("e. Statistiques");
                 System.out.println("q. Quitter");
 
                 String input = scanner.nextLine();
@@ -58,6 +59,9 @@ public class Main {
                         break;
                     case "t":
                         sortData(statement, scanner);
+                        break;
+                    case "e":
+                        statData(statement, scanner);
                         break;
 
 
@@ -240,6 +244,66 @@ public class Main {
 
         resultSet.close();
     }
+    private static void statData(Statement statement, Scanner scanner) throws SQLException {
+        System.out.println("Statistiques :");
+        System.out.println("m. Calculer la moyenne des notes");
+        System.out.println("a. Calculer la moyenne d'âge");
+        System.out.println("t. Compter les étudiants par tranche d'âge");
+        String input = scanner.nextLine();
+
+        switch (input.toLowerCase()) {
+            case "m":
+                System.out.print("Calcul de la moyenne des notes : ");
+                String queryAverageGrades = "SELECT AVG(grades) AS average_grades FROM students";
+                ResultSet resultSetAverageGrades = statement.executeQuery(queryAverageGrades);
+
+                if (resultSetAverageGrades.next()) {
+                    float averageGrades = resultSetAverageGrades.getFloat("average_grades");
+                    System.out.println("Moyenne des notes : " + averageGrades);
+                }
+
+                resultSetAverageGrades.close();
+                break;
+            case "a":
+                System.out.print("Calcul de la moyenne d'âge : ");
+                String queryAverageAge = "SELECT AVG(age) AS average_age FROM students";
+                ResultSet resultSetAverageAge = statement.executeQuery(queryAverageAge);
+
+                if (resultSetAverageAge.next()) {
+                    float averageAge = resultSetAverageAge.getFloat("average_age");
+                    System.out.println("Moyenne d'âge : " + averageAge);
+                }
+
+                resultSetAverageAge.close();
+                break;
+
+            case "t":
+                System.out.println("Compter les étudiants par tranche d'âge");
+                System.out.print("Tranche d'âge minimale : ");
+                int minAge = scanner.nextInt();
+                System.out.print("Tranche d'âge maximale : ");
+                int maxAge = scanner.nextInt();
+
+                String queryCountByAge = "SELECT COUNT(*) AS count FROM students WHERE age >= ? AND age <= ?";
+                java.sql.PreparedStatement preparedStatementCountByAge = statement.getConnection().prepareStatement(queryCountByAge);
+                preparedStatementCountByAge.setInt(1, minAge);
+                preparedStatementCountByAge.setInt(2, maxAge);
+                ResultSet resultSetCountByAge = preparedStatementCountByAge.executeQuery();
+
+                if (resultSetCountByAge.next()) {
+                    int countByAge = resultSetCountByAge.getInt("count");
+                    System.out.println("Nombre d'étudiants dans la tranche d'âge [" + minAge + " - " + maxAge + "] : " + countByAge);
+                }
+
+                resultSetCountByAge.close();
+                break;
+
+            default:
+                System.out.println("Option invalide.");
+                break;
+        }
+    }
+
 
 
     private static void searchData(Statement statement, Scanner scanner) throws SQLException {
