@@ -5,6 +5,34 @@ import java.sql.Statement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.Scanner;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+
+
+
+
+
+
 
 public class Main {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/students";
@@ -34,6 +62,8 @@ public class Main {
                 System.out.println("t. Trier la base de donnée");
                 System.out.println("c. Fermer la table");
                 System.out.println("e. Statistiques");
+                System.out.println("v. Exporter la base de donnée");
+
                 System.out.println("q. Quitter");
 
                 String input = scanner.nextLine();
@@ -62,6 +92,9 @@ public class Main {
                         break;
                     case "e":
                         statData(statement, scanner);
+                        break;
+                    case "v":
+                        exportData(statement, scanner);
                         break;
 
 
@@ -559,6 +592,96 @@ public class Main {
 
         resultSet.close();
     }
+
+
+    public static void exportToXML(ResultSet resultSet, String xmlFilePath) throws IOException, SQLException, TransformerException {
+
+
+        
+    }
+
+
+    private static void exportData(Statement statement, Scanner scanner) throws SQLException {
+        System.out.println("Exportation des données");
+
+        System.out.println("c. Exporter le tableau en format CSV");
+        System.out.println("x. Exporter le tableau en format XML");
+        System.out.println("j. Exporter le tableau en format JSON");
+        String input = scanner.nextLine();
+        switch (input.toLowerCase()) {
+            case "c":
+                System.out.print("Exportation du tableau en format CSV");
+
+                // Obtenez le chemin d'accès du fichier CSV auprès de l'utilisateur
+                System.out.print("Entrez le chemin d'accès du fichier CSV : ");
+                String csvFilePath = scanner.nextLine();
+
+                // Exécutez une requête pour obtenir les données à exporter
+                String query = "SELECT * FROM students";
+                ResultSet resultSet = statement.executeQuery(query);
+
+                try (FileWriter writer = new FileWriter(csvFilePath)) {
+                    // Écrivez les en-têtes des colonnes
+                    ResultSetMetaData metaData = resultSet.getMetaData();
+                    int columnCount = metaData.getColumnCount();
+                    for (int i = 1; i <= columnCount; i++) {
+                        writer.append(metaData.getColumnName(i));
+                        if (i < columnCount) {
+                            writer.append(",");
+                        }
+                    }
+                    writer.append("\n");
+
+                    // Écrivez les données dans le fichier CSV
+                    while (resultSet.next()) {
+                        for (int i = 1; i <= columnCount; i++) {
+                            writer.append(resultSet.getString(i));
+                            if (i < columnCount) {
+                                writer.append(",");
+                            }
+                        }
+                        writer.append("\n");
+                    }
+
+                    System.out.println("Exportation en CSV réussie !");
+                } catch (IOException e) {
+                    System.out.println("Erreur lors de l'exportation en CSV : " + e.getMessage());
+                } finally {
+                    resultSet.close();
+                }
+                break;
+
+            case "x":
+                System.out.print("Exportation du tableau en format XML");
+                System.out.print("Entrez le chemin d'accès du fichier XML : ");
+                String xmlFilePath = scanner.nextLine();
+
+                // Exécutez une requête pour obtenir les données à exporter
+                String xmlQuery = "SELECT * FROM students";
+                ResultSet xmlResultSet = statement.executeQuery(xmlQuery);
+
+                try {
+                    exportToXML(xmlResultSet, xmlFilePath);
+                    System.out.println("Exportation en XML réussie !");
+                } catch (IOException | TransformerException e) {
+                    System.out.println("Erreur lors de l'exportation en XML : " + e.getMessage());
+                } finally {
+                    xmlResultSet.close();
+                }
+                break;
+
+            case "j":
+                System.out.print("Exportation du tableau en format JSON");
+                // Ajoutez votre logique d'exportation en JSON ici
+                break;
+
+            default:
+                break;
+        }
+    }
+
+
+
 
 
     private static void closeResources(Connection connection, Statement statement) {
