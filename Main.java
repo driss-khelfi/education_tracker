@@ -29,91 +29,113 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 
 
-
-
+import org.json.*;
 
 
 
 public class Main {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/students";
-    private static final String DB_USERNAME = "root";
-    private static final String DB_PASSWORD = "msq.575:MRN!";
     private static boolean reverseOrder = false;
 
     public static void main(String[] args) {
-        try {
-            Connection connection = DriverManager.getConnection(DB_URL, DB_USERNAME, DB_PASSWORD);
-            Statement statement = connection.createStatement();
+        Scanner scanner = new Scanner(System.in);
 
-            Scanner scanner = new Scanner(System.in);
+        System.out.print("Nom d'utilisateur : (entrez root)");
+        String username = scanner.nextLine();
+        System.out.print("Mot de passe : entrez (msq.575:MRN!)");
+        String password = scanner.nextLine();
 
-            System.out.print("Connexion à la base de données réussie, appuyez sur entrée pour continuer");
-            scanner.nextLine();
+        if (authenticate(username, password)) {
+            try {
+                Connection connection = DriverManager.getConnection(DB_URL, username, password);
+                Statement statement = connection.createStatement();
 
-            boolean exit = false;
-            while (!exit) {
-                System.out.println("Options :");
-                System.out.println("a. Ajouter une ligne");
-                System.out.println("m. Modifier une ligne");
-                System.out.println("s. Supprimer une ligne");
-                System.out.println("l. Lire une ligne");
-                System.out.println("d. Lire la base de donnée");
-                System.out.println("r. Rechercher une ligne");
-                System.out.println("t. Trier la base de donnée");
-                System.out.println("c. Fermer la table");
-                System.out.println("e. Statistiques");
-                System.out.println("v. Exporter la base de donnée");
+                System.out.println("Connexion à la base de données réussie");
 
-                System.out.println("q. Quitter");
+                boolean exit = false;
+                while (!exit) {
+                    System.out.println("Options :");
+                    System.out.println("a. Ajouter une ligne");
+                    System.out.println("m. Modifier une ligne");
+                    System.out.println("s. Supprimer une ligne");
+                    System.out.println("l. Lire une ligne");
+                    System.out.println("d. Lire la base de données");
+                    System.out.println("r. Rechercher une ligne");
+                    System.out.println("t. Trier la base de données");
+                    System.out.println("c. Fermer la table");
+                    System.out.println("e. Statistiques");
+                    System.out.println("v. Exporter la base de données");
+                    System.out.println("q. Quitter");
 
-                String input = scanner.nextLine();
+                    String input = scanner.nextLine();
 
-                switch (input.toLowerCase()) {
-                    case "a":
-                        addData(statement, scanner);
-                        break;
-                    case "m":
-                        updateData(statement, scanner);
-                        break;
-                    case "s":
-                        deleteData(statement, scanner);
-                        break;
-                    case "d":
-                        displayData(statement);
-                        break;
-                    case "l":
-                        readData(statement, scanner);
-                        break;
-                    case "r":
-                        searchData(statement, scanner);
-                        break;
-                    case "t":
-                        sortData(statement, scanner);
-                        break;
-                    case "e":
-                        statData(statement, scanner);
-                        break;
-                    case "v":
-                        exportData(statement, scanner);
-                        break;
-
-
-                    case "c":
-                        exit = true;
-                        break;
-                    case "q":
-                        exit = true;
-                        closeResources(connection, statement);
-                        break;
-                    default:
-                        System.out.println("Option invalide.");
-                        break;
+                    switch (input.toLowerCase()) {
+                        case "a":
+                            addData(statement, scanner);
+                            break;
+                        case "m":
+                            updateData(statement, scanner);
+                            break;
+                        case "s":
+                            deleteData(statement, scanner);
+                            break;
+                        case "d":
+                            displayData(statement, 0, 3);
+                            break;
+                        case "l":
+                            readData(statement, scanner);
+                            break;
+                        case "r":
+                            searchData(statement, scanner);
+                            break;
+                        case "t":
+                            sortData(statement, scanner);
+                            break;
+                        case "e":
+                            statData(statement, scanner);
+                            break;
+                        case "v":
+                            exportData(statement, scanner);
+                            break;
+                        case "c":
+                            exit = true;
+                            break;
+                        case "q":
+                            exit = true;
+                            closeResources(connection, statement);
+                            break;
+                        default:
+                            System.out.println("Option invalide.");
+                            break;
+                    }
                 }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
+        } else {
+            System.out.println("Échec de la connexion à la base de données. Veuillez réessayer.");
+        }
+    }
+
+    private static boolean authenticate(String username, String password) {
+        // Vérifiez ici si le nom d'utilisateur et le mot de passe sont valides
+        // Vous pouvez utiliser une base de données, un fichier de configuration ou une autre méthode d'authentification
+        // Dans cet exemple, nous autorisons l'accès avec un nom d'utilisateur "admin" et un mot de passe "password"
+
+        return username.equals("root") && password.equals("msq.575:MRN!");
+    }
+
+    private static void closeResources(Connection connection, Statement statement) {
+        try {
+            if (statement != null)
+                statement.close();
+            if (connection != null)
+                connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     private static void addData(Statement statement, Scanner scanner) throws SQLException {
         System.out.println("Ajout de données");
@@ -254,8 +276,9 @@ public class Main {
     }
 
 
-    private static void displayData(Statement statement) throws SQLException {
-        ResultSet resultSet = statement.executeQuery("SELECT * FROM students");
+    private static void displayData(Statement statement, int startIndex, int pageSize) throws SQLException {
+        String query = "SELECT * FROM students LIMIT " + startIndex + ", " + pageSize;
+        ResultSet resultSet = statement.executeQuery(query);
 
         // Obtention du nombre de colonnes
         ResultSetMetaData metaData = resultSet.getMetaData();
@@ -268,15 +291,52 @@ public class Main {
         System.out.println();
 
         // Affichage des lignes de données
+        int count = 0;  // Compteur pour suivre le nombre d'éléments affichés
         while (resultSet.next()) {
+            if (count >= pageSize) {
+                break;  // Sortir de la boucle si la taille de la page est atteinte
+            }
             for (int i = 1; i <= columnCount; i++) {
                 System.out.printf("%-15s", resultSet.getString(i));
             }
             System.out.println();
+            count++;
         }
 
         resultSet.close();
+
+        // Affichage des boutons pour les 10 lignes suivantes ou précédentes
+        System.out.println();
+        if (startIndex >= pageSize) {
+            System.out.println("Afficher les 10 lignes précédentes : [P]");
+        }
+        System.out.println("Afficher les 10 lignes suivantes : [N]");
+        System.out.println("Quitter : [Q]");
+
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.nextLine();
+
+        switch (input.toLowerCase()) {
+            case "p":
+                if (startIndex >= pageSize) {
+                    displayData(statement, startIndex - pageSize, pageSize);
+                } else {
+                    System.out.println("Impossible d'afficher les lignes précédentes.");
+                }
+                break;
+            case "n":
+                displayData(statement, startIndex + pageSize, pageSize);
+                break;
+            case "q":
+                System.out.println("Quitter l'affichage des données.");
+                break;
+            default:
+                System.out.println("Entrée invalide.");
+                break;
+        }
     }
+
+
     private static void statData(Statement statement, Scanner scanner) throws SQLException {
         System.out.println("Statistiques :");
         System.out.println("m. Calculer la moyenne des notes");
@@ -671,9 +731,7 @@ public class Main {
                 break;
 
             case "j":
-                System.out.print("Exportation du tableau en format JSON");
-                // Ajoutez votre logique d'exportation en JSON ici
-                break;
+                System.out.print("exportation en format json");
 
             default:
                 break;
@@ -684,14 +742,7 @@ public class Main {
 
 
 
-    private static void closeResources(Connection connection, Statement statement) {
-        try {
-            if (statement != null)
-                statement.close();
-            if (connection != null)
-                connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
+
+
+
 }
